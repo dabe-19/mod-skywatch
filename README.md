@@ -17,3 +17,10 @@ A zero-API-key Blue Lodge situational awareness workbench built entirely on free
   - `outdoor_window_planner`: Concurrent FIFO 72h weather/darkness/aviation/HF pull → ReAct ranked window schedule saved to SQLite.
 - **Event Bus & Cron Integration**:
   - Includes `cron/skywatch_watch.sh` and opt-in `reactors/skywatch_reactors.json` to emit `skywatch.severe_alert` and `skywatch.geomagnetic_storm` events into Blue Lodge's POSIX Event Bus FIFO.
+
+---
+
+## License & Disclaimer
+
+Licensed under the **Apache License, Version 2.0** — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Provided **"AS IS"** for informational and experimental use only; verify safety-critical decisions with certified instruments and professionals.

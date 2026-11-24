@@ -4,10 +4,14 @@
   "name": "SkyWatch",
   "version": "1.0.1",
   "author": "Blue Lodge Guild",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "category": "telemetry",
   "tagline": "Local Field, Ham Radio, Aviation & Space-Weather Situational Bench: live Leaflet map + NEXRAD radar, NWS alerts, METAR/TAF, NOAA SWPC Kp/SFI/HF propagation, Open-Meteo 72h activity windows, and optional ADS-B/RTL-SDR feeds (zero API keys).",
-  "hardware_badges": ["no-special-hardware", "zero-keys-required", "sdr-adsb-optional"],
+  "hardware_badges": [
+    "no-special-hardware",
+    "zero-keys-required",
+    "sdr-adsb-optional"
+  ],
   "requires_core": ">=2026.11",
   "runtime": {
     "venv_mode": "shared_locked",
@@ -17,15 +21,28 @@
     "tools_schema": "tools/schemas.json",
     "tools_dispatcher": "tools/dispatch.sh",
     "tool_bundle": "+sky",
-    "core_tools": ["file_read", "file_write", "discord_send", "google_home_speak"],
+    "core_tools": [
+      "file_read",
+      "file_write",
+      "discord_send",
+      "google_home_speak"
+    ],
     "workflows_dir": "workflows",
     "domain_keywords": "skywatch weather nws alert radar nexrad metar taf aviation vfr ifr ceiling visibility space weather swpc kp solar flux sfi muf hf propagation ham radio aurora geomagnetic adsb opensky dump1090 stargazing drone boating field day barometer twilight",
-    "skills": ["skills/skywatch/SKILL.md"],
+    "skills": [
+      "skills/skywatch/SKILL.md"
+    ],
     "context_hook": "hooks/context.sh",
     "strategist_hook": "hooks/strategist.txt",
-    "slash_commands": ["commands/sky.sh"],
-    "cron_templates": ["cron/skywatch_watch.sh"],
-    "event_reactors": ["reactors/skywatch_reactors.json"],
+    "slash_commands": [
+      "commands/sky.sh"
+    ],
+    "cron_templates": [
+      "cron/skywatch_watch.sh"
+    ],
+    "event_reactors": [
+      "reactors/skywatch_reactors.json"
+    ],
     "ui": {
       "js": "ui/panel.js",
       "css": "ui/panel.css"
@@ -43,7 +60,10 @@
       "server.arcgisonline.com",
       "tile.openstreetmap.org"
     ],
-    "filesystem_rw": [".george/module_data/skywatch", ".george/artifacts"],
+    "filesystem_rw": [
+      ".george/module_data/skywatch",
+      ".george/artifacts"
+    ],
     "privileged_docker": false,
     "secrets_required": []
   },
