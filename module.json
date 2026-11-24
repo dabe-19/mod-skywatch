@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "skywatch",
   "name": "SkyWatch",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Blue Lodge Guild",
   "license": "MIT",
   "category": "telemetry",
@@ -40,10 +40,8 @@
       "api.open-meteo.com",
       "opensky-network.org",
       "mesonet.agron.iastate.edu",
-      "tile.openstreetmap.org",
-      "a.basemaps.cartocdn.com",
-      "b.basemaps.cartocdn.com",
-      "c.basemaps.cartocdn.com"
+      "server.arcgisonline.com",
+      "tile.openstreetmap.org"
     ],
     "filesystem_rw": [".george/module_data/skywatch", ".george/artifacts"],
     "privileged_docker": false,

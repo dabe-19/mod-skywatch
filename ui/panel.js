@@ -17,9 +17,12 @@
     const state = {
       hud: null,
       activity: 'stargazing',
+      basemap: 'dark',
       radarOn: true,
       adsbOn: true,
       map: null,
+      baseLayer: null,
+      labelLayer: null,
       radarLayer: null,
       markerLayer: null,
     };
@@ -57,14 +60,46 @@
       statusEl.style.display = msg ? 'block' : 'none';
     }
 
+    function applyBasemap() {
+      if (!state.map || !window.L) return;
+      if (state.baseLayer) { state.map.removeLayer(state.baseLayer); state.baseLayer = null; }
+      if (state.labelLayer) { state.map.removeLayer(state.labelLayer); state.labelLayer = null; }
+
+      if (state.basemap === 'satellite') {
+        state.baseLayer = window.L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          { attribution: 'Esri World Imagery', maxZoom: 18 }
+        ).addTo(state.map);
+        state.labelLayer = window.L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+          { attribution: 'Esri Reference', maxZoom: 16, opacity: 0.85 }
+        ).addTo(state.map);
+      } else if (state.basemap === 'osm') {
+        state.baseLayer = window.L.tileLayer(
+          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          { attribution: '&copy; OpenStreetMap contributors', maxZoom: 18 }
+        ).addTo(state.map);
+      } else {
+        // Default: Free, zero-API-key Esri World Dark Gray Canvas + Reference labels
+        state.baseLayer = window.L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+          { attribution: 'Esri Dark Gray Canvas', maxZoom: 16 }
+        ).addTo(state.map);
+        state.labelLayer = window.L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+          { attribution: 'Esri Reference', maxZoom: 16, opacity: 0.9 }
+        ).addTo(state.map);
+      }
+      if (state.radarLayer && state.radarOn) {
+        state.radarLayer.bringToFront();
+      }
+    }
+
     function ensureMap(lat, lon) {
       if (!window.L) return null;
       if (!state.map) {
         state.map = window.L.map(mapDiv, { zoomControl: true }).setView([lat, lon], 8);
-        window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-          attribution: '&copy; OpenStreetMap &copy; CARTO',
-          maxZoom: 18,
-        }).addTo(state.map);
+        applyBasemap();
         state.radarLayer = window.L.tileLayer(
           'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png',
           { opacity: 0.58, attribution: 'NEXRAD IEM' }
@@ -379,11 +414,22 @@
       },
     });
 
+    const basemapSel = el('select', { className: 'sw-select' }, [
+      el('option', { value: 'dark', text: 'Map: Dark Canvas (Esri)' }),
+      el('option', { value: 'satellite', text: 'Map: Satellite (Esri)' }),
+      el('option', { value: 'osm', text: 'Map: OpenStreetMap' }),
+    ]);
+    basemapSel.addEventListener('change', () => {
+      state.basemap = basemapSel.value;
+      applyBasemap();
+    });
+
     const controlsCard = el('div', { className: 'sw-card' }, [
       el('div', { className: 'sw-head' }, [
         el('div', { className: 'sw-title', text: 'SkyWatch Station & Controls (Zero API Keys)' }),
         el('div', { className: 'sw-row' }, [
           actSel,
+          basemapSel,
           radarBtn,
           adsbBtn,
           el('button', { type: 'button', className: 'sw-btn sw-btn-primary', text: 'Refresh Live Feeds', on: { click: refreshHud } }),
