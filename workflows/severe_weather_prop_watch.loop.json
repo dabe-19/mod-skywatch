@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "id": "severe_weather_prop_watch",
+  "name": "Severe Weather & HF Propagation Watch",
+  "owner": "skywatch",
+  "owner_type": "module",
+  "category": "telemetry",
+  "version": "1.0.0",
+  "description": "FIFO parallel fan-out of NOAA/NWS active alerts, METAR/TAF aviation conditions, and NOAA SWPC solar flux/Kp/HF propagation followed by a 200-turn ReAct operational briefing and optional spoken/Discord alert.",
+  "defaults": {
+    "max_turns": 200,
+    "ipc_priority": 100,
+    "fifo_window": 16,
+    "tool_timeout_sec": 90,
+    "require_result_json": true,
+    "output_artifact": "result.json"
+  },
+  "inputs": [
+    { "name": "station_id", "type": "number", "label": "Station ID", "required": false },
+    { "name": "notify_discord", "type": "boolean", "label": "Send Discord warning if severe/G2+", "required": false, "default": false },
+    { "name": "speak_alert", "type": "boolean", "label": "Speak Google Home alert if severe/G2+", "required": false, "default": false }
+  ],
+  "tools": {
+    "bundles": ["+sky"],
+    "allow": [
+      "sky_nws_watch",
+      "sky_aviation",
+      "sky_space_weather",
+      "sky_briefing_save",
+      "file_write",
+      "discord_send",
+      "google_home_speak"
+    ],
+    "deny": []
+  },
+  "phases": [
+    {
+      "id": "preflight_feeds",
+      "name": "Phase 1: Parallel FIFO NWS, METAR/TAF & SWPC Space-Weather Fetch",
+      "kind": "fifo_parallel",
+      "enabled": true,
+      "continue_on_error": true,
+      "timeout_sec": 45,
+      "description": "Concurrently fetches NWS alerts + barometer trend, AviationWeather METAR/TAF, and NOAA SWPC Kp/SFI/HF bands before Turn 1.",
+      "tasks": [
+        {
+          "id": "nws_watch",
+          "tool": "sky_nws_watch",
+          "args_template": { "station_id": "{{params.station_id}}" },
+          "output_key": "nws"
+        },
+        {
+          "id": "aviation_metar",
+          "tool": "sky_aviation",
+          "args_template": { "station_id": "{{params.station_id}}" },
+          "output_key": "aviation"
+        },
+        {
+          "id": "space_weather",
+          "tool": "sky_space_weather",
+          "args_template": { "station_id": "{{params.station_id}}" },
+          "output_key": "swpc"
+        }
+      ]
+    },
+    {
+      "id": "watch_briefing",
+      "name": "Phase 2: ReAct Situational Briefing & Threshold Alerting",
+      "kind": "react",
+      "enabled": true,
+      "max_turns": 200,
+      "tool_filter": "default",
+      "tools_allow": [],
+      "prompt_template": "Execute the SkyWatch Severe Weather & HF Propagation Watch briefing.\n\nINPUTS:\n- Station ID: {{params.station_id | (default station)}}\n- Notify Discord on Severe/G2+: {{params.notify_discord | false}}\n- Speak Google Home Alert on Severe/G2+: {{params.speak_alert | false}}\n- Output artifact path: {{result_path}}\n\nPHASE 1 PARALLEL FIFO TELEMETRY:\n- NWS Alerts & Barometer Trend: {{phase.preflight_feeds.nws}}\n- Aviation METAR/TAF: {{phase.preflight_feeds.aviation}}\n- NOAA SWPC Kp / SFI / HF Bands / Aurora: {{phase.preflight_feeds.swpc}}\n\nSTEPS:\n1. Analyze active NWS alerts, 3h barometric pressure tendency, nearest METAR flight category (VFR/MVFR/IFR/LIFR), geomagnetic G-scale / R-scale, aurora potential, and best open HF ham bands right now.\n2. Save the complete operational briefing to SQLite using `sky_briefing_save(kind='watch', title=..., summary_md=...)`.\n3. ONLY if severe/extreme NWS alerts are active OR Kp >= 6 (G2+): respect `notify_discord` (call `discord_send`) and `speak_alert` (call `google_home_speak` with a crisp 2-sentence alert).\n4. Write structured JSON to `{{result_path}}` via `file_write` with keys: `workflow`, `alert_level`, `flight_category`, `kp_index`, `sfi`, `best_hf_bands`, `aurora_possible`, and `summary_markdown`.\n5. Call `milestone_complete` and deliver the concise field watch briefing.",
+      "gate": {
+        "type": "json_file",
+        "path": "{{result_path}}",
+        "required_keys": ["workflow", "alert_level", "summary_markdown"]
+      }
+    }
+  ]
+}

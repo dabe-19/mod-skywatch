@@ -1,0 +1,3 @@
+When working on SkyWatch (weather, NWS alerts, METAR/TAF aviation, NOAA SWPC Kp/SFI/HF ham radio propagation, aurora, ADS-B, or outdoor window planning):
+- Use the `+sky` tools (`sky_nws_watch`, `sky_aviation`, `sky_space_weather`, `sky_window_planner`, `sky_adsb_traffic`) which query live free NOAA/NWS, AviationWeather.gov, SWPC, Open-Meteo, and OpenSky/dump1090 feeds with zero API keys.
+- Report exact flight categories (VFR/MVFR/IFR/LIFR), Kp/G-scale, SFI, MUF, and CAPE/wind hazards clearly.

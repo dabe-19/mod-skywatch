@@ -1,0 +1,20 @@
+{
+  "reactors": [
+    {
+      "id": "rx_skywatch_severe",
+      "module_id": "skywatch",
+      "enabled": false,
+      "event_type": "skywatch.severe_alert",
+      "description": "Triggers SkyWatch Severe Weather & Propagation Watch ALP v1 loop when severe/extreme NWS alerts fire (opt-in).",
+      "action": "/workflow run-loop skywatch/severe_weather_prop_watch"
+    },
+    {
+      "id": "rx_skywatch_geomag",
+      "module_id": "skywatch",
+      "enabled": false,
+      "event_type": "skywatch.geomagnetic_storm",
+      "description": "Triggers SkyWatch Watch loop on G2+ (Kp >= 6) geomagnetic storm / aurora event (opt-in).",
+      "action": "/workflow run-loop skywatch/severe_weather_prop_watch"
+    }
+  ]
+}

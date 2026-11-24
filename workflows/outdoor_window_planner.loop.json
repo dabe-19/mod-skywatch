@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "id": "outdoor_window_planner",
+  "name": "72-Hour Outdoor & Field Window Planner",
+  "owner": "skywatch",
+  "owner_type": "module",
+  "category": "telemetry",
+  "version": "1.0.0",
+  "description": "FIFO parallel evaluation of 72-hour Open-Meteo wind, precipitation, cloud cover, CAPE, astronomical darkness, METAR/TAF ceiling, and HF propagation followed by a 200-turn ReAct window ranking for stargazing, drone flights, boating, or ham field day.",
+  "defaults": {
+    "max_turns": 200,
+    "ipc_priority": 100,
+    "fifo_window": 16,
+    "tool_timeout_sec": 90,
+    "require_result_json": true,
+    "output_artifact": "result.json"
+  },
+  "inputs": [
+    { "name": "station_id", "type": "number", "label": "Station ID", "required": false },
+    { "name": "activity", "type": "select", "label": "Target Activity", "required": true, "default": "stargazing", "options": ["stargazing", "drone", "boating", "ham_field_day"] }
+  ],
+  "tools": {
+    "bundles": ["+sky"],
+    "allow": [
+      "sky_window_planner",
+      "sky_aviation",
+      "sky_space_weather",
+      "sky_nws_watch",
+      "sky_briefing_save",
+      "file_write"
+    ],
+    "deny": []
+  },
+  "phases": [
+    {
+      "id": "preflight_windows",
+      "name": "Phase 1: Parallel FIFO 72h Weather, Darkness, TAF & HF Fetch",
+      "kind": "fifo_parallel",
+      "enabled": true,
+      "continue_on_error": true,
+      "timeout_sec": 45,
+      "description": "Fetches 72-hour scored windows, METAR/TAF ceilings, and SWPC HF/aurora conditions concurrently.",
+      "tasks": [
+        {
+          "id": "windows_72h",
+          "tool": "sky_window_planner",
+          "args_template": {
+            "station_id": "{{params.station_id}}",
+            "activity": "{{params.activity | stargazing}}"
+          },
+          "output_key": "windows"
+        },
+        {
+          "id": "aviation_taf",
+          "tool": "sky_aviation",
+          "args_template": { "station_id": "{{params.station_id}}" },
+          "output_key": "aviation"
+        },
+        {
+          "id": "space_weather",
+          "tool": "sky_space_weather",
+          "args_template": { "station_id": "{{params.station_id}}" },
+          "output_key": "swpc"
+        }
+      ]
+    },
+    {
+      "id": "rank_windows",
+      "name": "Phase 2: ReAct 72-Hour Go/No-Go Schedule Synthesis",
+      "kind": "react",
+      "enabled": true,
+      "max_turns": 200,
+      "tool_filter": "default",
+      "tools_allow": [],
+      "prompt_template": "Execute the SkyWatch 72-Hour Outdoor & Field Window Planner.\n\nINPUTS:\n- Activity: {{params.activity | stargazing}}\n- Station ID: {{params.station_id | (default station)}}\n- Output artifact path: {{result_path}}\n\nPHASE 1 PARALLEL FIFO TELEMETRY:\n- 72h Scored Windows + Moon & Darkness: {{phase.preflight_windows.windows}}\n- Nearest METAR / TAF: {{phase.preflight_windows.aviation}}\n- Space Weather (Kp / SFI / HF / Aurora): {{phase.preflight_windows.swpc}}\n\nSTEPS:\n1. Identify the top 3 contiguous multi-hour Go/No-Go windows over the next 72 hours for `{{params.activity | stargazing}}`, calling out exact UTC/local timing, cloud cover, wind/gusts, ceiling/visibility, CAPE/lightning risks, and (where relevant) astronomical darkness, moon illumination, or HF band picks.\n2. Save the ranked schedule via `sky_briefing_save(kind='planner', title='72h {{params.activity | stargazing}} Window Plan', summary_md=...)`.\n3. Write JSON to `{{result_path}}` via `file_write` with keys: `workflow`, `activity`, `best_windows`, `hazards`, and `summary_markdown`.\n4. Call `milestone_complete` and return the crisp go/no-go table.",
+      "gate": {
+        "type": "json_file",
+        "path": "{{result_path}}",
+        "required_keys": ["workflow", "activity", "summary_markdown"]
+      }
+    }
+  ]
+}

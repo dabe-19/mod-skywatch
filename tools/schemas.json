@@ -1,0 +1,116 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "sky_nws_watch",
+      "description": "Fetch live NOAA/NWS active severe weather alerts, forecast office metadata, nearest surface observation, and local 3h barometric pressure trend (zero API keys).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "station_id": { "type": "integer" },
+          "lat": { "type": "number" },
+          "lon": { "type": "number" }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "sky_aviation",
+      "description": "Fetch nearby AviationWeather.gov METAR and TAF reports with decoded FAA flight category (VFR/MVFR/IFR/LIFR), ceiling AGL, visibility SM, wind, and altimeter.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "station_id": { "type": "integer" },
+          "lat": { "type": "number" },
+          "lon": { "type": "number" },
+          "radius_nm": { "type": "number", "default": 45 },
+          "icao_hint": { "type": "string" }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "sky_space_weather",
+      "description": "Fetch live NOAA SWPC planetary Kp index (G0-G5), 10.7cm solar flux (SFI), GOES X-ray radio blackout scale (R0-R5), aurora visibility estimate, and 80m-10m Day/Night HF ham band propagation.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "station_id": { "type": "integer" },
+          "lat": { "type": "number" }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "sky_window_planner",
+      "description": "Evaluate 72-hour Open-Meteo wind/gusts/cloud/CAPE/visibility plus astronomical twilight/darkness & moon phase to score optimal outdoor windows for stargazing, drone, boating, or ham_field_day.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "station_id": { "type": "integer" },
+          "lat": { "type": "number" },
+          "lon": { "type": "number" },
+          "activity": { "type": "string", "enum": ["stargazing", "drone", "boating", "ham_field_day"], "default": "stargazing" }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "sky_adsb_traffic",
+      "description": "Fetch live local ADS-B aircraft traffic from a configured local dump1090/readsb receiver or OpenSky Network public bounding-box feed.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "station_id": { "type": "integer" },
+          "lat": { "type": "number" },
+          "lon": { "type": "number" },
+          "radius_nm": { "type": "number", "default": 45 }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "sky_briefing_save",
+      "description": "Persist a SkyWatch severe-weather, HF propagation, or 72-hour activity window briefing into local SQLite.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "station_id": { "type": "integer" },
+          "kind": { "type": "string", "enum": ["watch", "planner", "alert"], "default": "watch" },
+          "title": { "type": "string" },
+          "summary_md": { "type": "string" }
+        },
+        "required": ["title", "summary_md"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "sky_station_set",
+      "description": "Save or update a SkyWatch home/field station location (name, lat, lon, optional ICAO hint & local dump1090 URL).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "lat": { "type": "number" },
+          "lon": { "type": "number" },
+          "icao_hint": { "type": "string" },
+          "adsb_local_url": { "type": "string" },
+          "radius_nm": { "type": "number" }
+        },
+        "required": ["name", "lat", "lon"]
+      }
+    }
+  }
+]
